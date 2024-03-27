@@ -37,13 +37,27 @@ for day in range(long_days, len(hist)):
 
 x = range(len(dates))
 
+# starting balances
+starting_balance = 1000000
+balance = 1000000
+num_shares = 0
+
 # Find the buy and sell signals
 signals = []
 for i in range(1, len(rma_short_data)):
     if rma_short_data[i] >= rma_long_data[i] and rma_short_data[i-1] <= rma_long_data[i-1]:
         signals.append(('Buy', closing_prices[i]))
+        
+        num_shares = balance/closing_prices[i]
+        balance = 0
+        
     if rma_short_data[i] <= rma_long_data[i] and rma_short_data[i-1] >= rma_long_data[i-1]:
         signals.append(('Sell', closing_prices[i]))
+
+        if num_shares != 0:
+            balance = closing_prices[i] * num_shares
+            num_shares = 0
+
     else:
         signals.append(('None', None))
 
@@ -72,6 +86,9 @@ ax1.set_xlabel('Date')
 ax1.set_ylabel('Price')
 ax1.set_title(f'{name} RMA Analysis')
 ax1.grid(True)
+
+investment_summary = f"Assuming the first investment is made at the first buy signal, following the RMA strategy for stock {ticker} for the past {period} with a starting balance of ${starting_balance:,.2f} will yield:\nClosing balance: ${balance:,.2f}\nValue of investments: ${(num_shares*closing_prices[-1]):,.2f}"
+ax1.text(0.01, 0.01, investment_summary, transform=ax1.transAxes, fontsize=9, verticalalignment='bottom', bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="black", lw=1))
 
 # show plot
 plt.show()
